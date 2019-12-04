@@ -7,44 +7,57 @@ const app = express();
 app.use(morgan('common'));
 
 app.get('/apps', (req, res) => {
-  const { sort, genre = '' } = req.query;
-  // const { genre } = req.query;
+  const { sort, genres = '' } = req.query;
 
   console.log('sort is', sort);
-  let result;
-
-  let resultsByApp = appData.filter(app => {
-    return app.App;
-  });
-
-  let resultsByRating = appData.filter(rating => {
-    return rating.Rating;
-  });
+  console.log('genre is', genres);
 
   if (sort && !['rating', 'app'].includes(sort)) {
     return res.status(400).send('Sort must be either rating or app');
   }
 
-  if (sort === 'rating') {
-    result = resultsByRating.sort((a, b) => {
-      a.rating < b.rating ? -1 : 1;
-      console.log('rating', result);
-      res.set('Content-Type', 'application/json');
-      res.json(result);
-    });
-  } else if (sort === 'app') {
-    result = resultsByApp.sort((a, b) => {
-      a.app < b.app ? -1 : 1;
-      console.log('sorting', result);
-      res.set('Content-Type', 'application/json');
-      res.json(result);
-    });
-  } else {
-    const results = appData.map(app => app);
-    console.log('hi');
-    res.set('Content-Type', 'application/json');
-    res.json(results);
+  const validGenres = [
+    'Action',
+    'Puzzle',
+    'Strategy',
+    'Casual',
+    'Arcade',
+    'Card'
+  ];
+
+  if (genres) {
+    if (
+      !validGenres.find(option => option.toLowerCase() === genres.toLowerCase())
+    ) {
+      return res
+        .status(400)
+        .json({ message: `Valid genres include: ${validGenres}` });
+    }
   }
+
+  let sortedArray = appData.filter(app =>
+    app.Genres.toLowerCase().includes(req.query.genres.toLowerCase())
+  );
+
+  // return full array
+
+  if (sort === 'app') {
+    // eslint-disable-next-line no-inner-declarations
+    function compareApp(a, b) {
+      return a.App.localeCompare(b.App);
+    }
+    sortedArray = sortedArray.sort(compareApp);
+  }
+
+  if (sort === 'rating') {
+    // eslint-disable-next-line no-inner-declarations
+    function compareRating(a, b) {
+      return b.Rating - a.Rating;
+    }
+    sortedArray = sortedArray.sort(compareRating);
+  }
+
+  res.json(sortedArray);
 });
 
 app.listen(8000, () => {
