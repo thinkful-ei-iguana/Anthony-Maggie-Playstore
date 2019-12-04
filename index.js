@@ -7,19 +7,18 @@ const app = express();
 app.use(morgan('common'));
 
 app.get('/apps', (req, res) => {
-  const { sort, genre } = req.query;
+  const { sort, genre = '' } = req.query;
   // const { genre } = req.query;
 
   console.log('sort is', sort);
+  let result;
 
   let resultsByApp = appData.filter(app => {
-    console.log('app.app is', app.App);
-    return app;
+    return app.App;
   });
 
   let resultsByRating = appData.filter(rating => {
-    console.log('rating.Rating is', rating.Rating);
-    return rating;
+    return rating.Rating;
   });
 
   if (sort && !['rating', 'app'].includes(sort)) {
@@ -27,19 +26,22 @@ app.get('/apps', (req, res) => {
   }
 
   if (sort === 'rating') {
-    resultsByRating.sort((a, b) => {
+    result = resultsByRating.sort((a, b) => {
       a.rating < b.rating ? -1 : 1;
+      console.log('rating', result);
       res.set('Content-Type', 'application/json');
-      res.json(resultsByRating);
+      res.json(result);
     });
   } else if (sort === 'app') {
-    resultsByApp.sort((a, b) => {
+    result = resultsByApp.sort((a, b) => {
       a.app < b.app ? -1 : 1;
+      console.log('sorting', result);
       res.set('Content-Type', 'application/json');
-      res.json(resultsByApp);
+      res.json(result);
     });
   } else {
     const results = appData.map(app => app);
+    console.log('hi');
     res.set('Content-Type', 'application/json');
     res.json(results);
   }
